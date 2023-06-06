@@ -1,0 +1,179 @@
+import {Component} from 'react'
+import {v4} from 'uuid'
+import './index.css'
+import {format} from 'date-fns'
+import AppointmentItem from '../AppointmentItem'
+
+class Appointments extends Component {
+  state = {
+    appointmentsList: [],
+    titleInput: '',
+    dateInput: '',
+    isFilterActive: false,
+  }
+
+  toggleIsFilter = id => {
+    this.setState(prevState => ({
+      appointmentsList: prevState.appointmentsList.map(eachAppointment => {
+        if (id === eachAppointment.id) {
+          return {...eachAppointment, isStarred: !eachAppointment.isStarred}
+        }
+        return eachAppointment
+      }),
+    }))
+  }
+
+  onClickFilter = () => {
+    const {isFilterActive} = this.state
+    this.setState({
+      isFilterActive: !isFilterActive,
+    })
+  }
+
+  onAddAppointment = event => {
+    event.preventDefault()
+    const {titleInput, dateInput} = this.state
+
+    const formattedDate = dateInput
+      ? format(new Date(dateInput), 'dd  MMMM yyyy, EEEE')
+      : ''
+
+    const newAppointment = {
+      id: v4(),
+      title: titleInput,
+      date: formattedDate,
+      isStarred: false,
+    }
+
+    this.setState(prevState => ({
+      appointmentsList: [...prevState.appointmentsList, newAppointment],
+      titleInput: '',
+      dateInput: '',
+    }))
+  }
+
+  onChangeDateInput = event => {
+    this.setState({dateInput: event.target.value})
+  }
+
+  onChangeTitleInput = event => {
+    this.setState({titleInput: event.target.value})
+  }
+
+  getFilteredAppointmentsList = () => {
+    const {appointmentsList, isFilterActive} = this.state
+    if (isFilterActive) {
+      return appointmentsList.filter(
+        eachTransaction => eachTransaction.isStarred === true,
+      )
+    }
+    return appointmentsList
+  }
+
+  render() {
+    const {titleInpt, dateInput, isFilterActive} = this.state
+    const filterClassName = isFilterActive ? 'filter-filled' : 'filter-empty'
+    const filteredAppointmentsList = this.getFilteredAppointmentsList()
+
+    return (
+      <div className="bg-container">
+        <div className="card">
+          <div className="from-and-pic-container">
+            <form className="form" onSubmit={this.onAddAppointment}>
+              <h1 className="heading">Add Appointments</h1>
+              <label className="label" htmlFor="title">
+                TITLE
+              </label>
+              <input
+                type="input"
+                id="title"
+                className="input"
+                placeholder="Title"
+                value={titleInpt}
+                onChange={this.onChangeTitleInput}
+              />
+              <label className="label" htmlFor="date">
+                Date
+              </label>
+              <input
+                type="date"
+                id="date"
+                className="input"
+                value={dateInput}
+                onChange={this.onChangeDateInput}
+              />
+              <button className="button" type="submit">
+                Add
+              </button>
+            </form>
+            <div className="image-container">
+              <img
+                src="https://assets.ccbp.in/frontend/react-js/appointments-app/appointments-img.png"
+                alt="appointments"
+                className="image"
+              />
+            </div>
+          </div>
+          <hr />
+          <div className="appointments-container-1">
+            <h2 className="para">Appointments</h2>
+            <button
+              className={`filter-style ${filterClassName}`}
+              type="button"
+              onClick={this.onClickFilter}
+            >
+              Starred
+            </button>
+          </div>
+          <ul className="appointments-container-2">
+            {filteredAppointmentsList.map(eachAppointment => (
+              <AppointmentItem
+                key={eachAppointment.id}
+                appointmentDetails={eachAppointment}
+                toggleIsFilter={this.toggleIsFilter}
+              />
+            ))}
+          </ul>
+        </div>
+      </div>
+    )
+  }
+}
+
+export default Appointments
+
+
+
+import './index.css'
+
+const AppointmentItem = props => {
+  const {appointmentDetails, toggleIsStarred} = props
+  const {id, title, date, isStarred} = appointmentDetails
+
+  const starImgUrl = isStarred
+    ? 'https://assets.ccbp.in/frontend/react-js/appointments-app/filled-star-img.png'
+    : 'https://assets.ccbp.in/frontend/react-js/appointments-app/star-img.png'
+
+  const onClickStar = () => {
+    toggleIsStarred(id)
+  }
+
+  return (
+    <li className="appointment-item">
+      <div className="header-container">
+        <p className="title">{title}</p>
+        <button
+          type="button"
+          data-testid="star"
+          className="star-button"
+          onClick={onClickStar}
+        >
+          <img src={starImgUrl} className="star" alt="star" />
+        </button>
+      </div>
+      <p className="date">Date: {date}</p>
+    </li>
+  )
+}
+
+export default AppointmentItem
